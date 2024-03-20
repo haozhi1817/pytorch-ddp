@@ -1,0 +1,32 @@
+data:
+    train_folder: /disk2/haozhi/tmp/data/102flowers/train
+    valid_folder: /disk2/haozhi/tmp/data/102flowers/valid
+
+model:
+    num_classes: 102
+    model: res34
+loss:
+    ce_loss_weight: 1
+    fc_loss_weight: 0
+
+train:
+    device: cuda:0
+    num_epochs: 100
+    batch_size: 128
+    lr: 0.00043047
+    wd: 1.e-5
+    opt: adam
+    lr_scheduler: step
+    step_lr_scheduler:
+        step: 50
+        gamma: 0.9
+    amp: True
+    log_dir: /disk2/haozhi/tmp/code/dist_train/log
+    ckpt_dir: /disk2/haozhi/tmp/code/dist_train/ckpt
+    resume: /disk2/haozhi/tmp/code/dist_train/ckpt/resume99_dist/Tue_Mar_19_15:39:56_2024/model_99.pth
+    version: resume99_dist_again
+
+valid:
+    batch_size: 128
+    device: cuda:0
+    resume: /disk2/haozhi/tmp/code/dist_train/ckpt/resume99_dist/Tue_Mar_19_15:39:56_2024/model_99.pth
