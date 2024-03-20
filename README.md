@@ -7,7 +7,7 @@
 
 DDP与DP的核心差异在于前者属于多进程后者属于多线程。至于DDP采用ring-all-reduce来处理更新量，DP采用PS模式来处理更新量，个人研究不多，在我浅薄的理解中，仅仅是因为torch的DP采用PS模式，而并不是DP仅有PS这一种实现模式。
 
-> 注意，这里提到的是更新量而非梯度，因为不同的optimizer会根据梯度计算不同的更新量，例如SAG的更新量等于梯度乘以学习率，其他优化器则还包括动量，二阶导等多种形式。这里提到这个差异，并非为了强调二者有何不同，恰恰是为了强调二者实际上是相同的。
+> 注意，这里提到的是更新量而非梯度，因为不同的optimizer会根据梯度计算不同的更新量，例如SAD的更新量等于梯度乘以学习率，其他优化器则还包括动量，二阶导等多种形式。这里提到这个差异，并非为了强调二者有何不同，恰恰是为了强调二者实际上是相同的。
 
 ### 梯度累加
 
@@ -24,7 +24,7 @@ python dist_operator.py
 
 ### torchrun
 
-pytorch支持多种方式启动多进程训练，最基本的方式为**torch.multiprocessing.set_start_method("spawn")**,还有一种弹性启动的方式: **torch.distributed.launch**，但是这种方式正在被启用，最新的启动方式为: **torchrun**.所谓的弹性启动即可以实现当程序检测到某一个进程因为某些原因死亡后，程序可以重新启动整个程序。这个特性针对大量节点的情况非常有用。可以通过下述代码来尝试这个功能, 其中**nproc_per_node=2**代表单个节点（机器）上有两个进程（显卡）：
+pytorch支持多种方式启动多进程训练，最基本的方式为**torch.multiprocessing.set_start_method("spawn")**,还有一种弹性启动的方式: **torch.distributed.launch**，但是这种方式正在被弃用，最新的启动方式为: **torchrun**.所谓的弹性启动即可以实现当程序检测到某一个进程因为某些原因死亡后，程序可以重新启动整个程序。这个特性针对大量节点的情况非常有用。可以通过下述代码来尝试这个功能, 其中**nproc_per_node=2**代表单个节点（机器）上有两个进程（显卡）：
 ```bash
 cd utils
 turchrun --nproc_per_node=2 launch_try.py
@@ -41,7 +41,7 @@ turchrun --nproc_per_node=2 launch_try.py
 * shuffle需要在DistributedSampler内完成，而不在DataLoader内完成
 * 每一个epoch都需要对DistributedSampler进行set_epoch操作以保证每一个epoch得到的shuffle结果都是不一样的
 
-上述两点成立的原因是Sampler内部通过一个generator来生成采样顺序列表，而这个generator接受random_seed作为参数。具体细节可以查看官方文档，了解Dataset, Sampler, BatchSampler, collect_fn, DataLoader的关系以及DistributedSampler的实现。
+上述两点成立的原因是Sampler内部通过一个generator来生成采样索引列表，而这个generator接受random_seed作为参数。具体细节可以查看官方文档，了解Dataset, Sampler, BatchSampler, collect_fn, DataLoader的关系以及DistributedSampler的实现方式。
 
 ### Init
 
@@ -72,6 +72,10 @@ Loss无需进行DDP，因为input, label都放到了对应的进程内，所以l
 
 将每一个进程得到的metric经过gather或者reduce拿到主卡上后，再计算均值。需要格外注意计算均值时的分母。考虑到batch-size并不一定相等，因此每个进程上的metric最好不要先各自计算均值。
 
+### Infer
+
+Infer过程与训练过程无异，除了上述metric的计算外，如果需要保存infer结果，前文提到的多进程不共享数据是一个需要注意的点，这是多进程的问题，与pytorch无关。
+
 ### 运行
 
 通过下述指令完成demo测试：
@@ -79,7 +83,7 @@ Loss无需进行DDP，因为input, label都放到了对应的进程内，所以l
 cd base
 turchrun --nproc_per_node=2 train_dist.py
 ```
-另外还包括一份单卡demo的对照demo：
+另外还包括一份单卡情况的对照demo：
 ```bash
 cd base
 python train.py
