@@ -81,7 +81,7 @@ Infer过程与训练过程无异，除了上述metric的计算外，如果需要
 通过下述指令完成demo测试：
 ```bash
 cd base
-turchrun --nproc_per_node=2 train_dist.py
+torchrun --nproc_per_node=2 train_dist.py
 ```
 另外还包括一份单卡情况的对照demo：
 ```bash
