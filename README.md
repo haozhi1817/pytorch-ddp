@@ -49,6 +49,14 @@ turchrun --nproc_per_node=2 launch_try.py
 
 ### Model
 
+#### SyncBatchNorm
+对于使用了BatchNorm的module，我们需要在将Model进行DDP warp之前，先通过
+```python
+model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+```
+将其中的BatchNorm转换为SyncBatchNorm。
+但是，很不幸的是，在pytorch 2.1版本之前，SyncBatchNorm并不支持AMP，2.1版本的[代码修改](https://github.com/pytorch/pytorch/blob/4c55dc50355d5e923642c59ad2a23d6ad54711e7/torch/nn/modules/_functions.py#L90)参考这里
+
 #### DDP
 初始化模型得到的model与被DDP包装后的model的关系是：
 ```python
