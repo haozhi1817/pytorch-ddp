@@ -104,6 +104,12 @@ python train.py
 vim .vscode/launch.json
 ```
 其中需要重点关注的是:
-* **program**: torchrun 的路径
+* **program**: torchrun 的路径, 可以利用***whereis*** 指令查找
 * **args**： 正常运行程序时的命令行参数
 * **cwd** ：代码所在的路径
+以下是一个基本示例：
+```bash
+ "program": "/.conda/envs/env_hz/bin/torchrun",
+ "args": ["--nproc_per_node=2", "train_ddp.py"],
+ "cwd": "/engine"
+```
